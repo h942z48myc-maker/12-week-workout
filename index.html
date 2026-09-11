@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f7f9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>12周塑形工作台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#222;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif}
+.app{max-width:620px;margin:auto;min-height:100vh;padding-bottom:82px}
+header{padding:18px 16px 10px}h1{margin:0;font-size:25px}.sub{font-size:13px;color:#777;margin-top:4px}
+.weekbar,.daybar{display:flex;gap:7px;overflow:auto;padding:8px 16px;scrollbar-width:none}.weekbar::-webkit-scrollbar,.daybar::-webkit-scrollbar{display:none}
+button{font:inherit}.week,.day{border:0;background:#e9ebef;border-radius:12px;padding:9px 13px;white-space:nowrap}.week.active,.day.active{background:#222;color:#fff}
+.page{padding:0 16px}.card{background:#fff;border:1px solid #e1e4e8;border-radius:16px;padding:15px;margin:10px 0;box-shadow:0 2px 10px #00000008}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f3f4f6;border-radius:12px;padding:11px}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:#777}
+.progress{height:10px;background:#e8eaed;border-radius:99px;overflow:hidden;margin:10px 0}.fill{height:100%;background:#222;width:0}
+.exercise{padding:13px 0;border-top:1px solid #eee}.exercise:first-child{border-top:0}.ename{font-weight:700}.meta{font-size:12px;color:#777;margin:4px 0 8px}
+.row{display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:7px;align-items:center}.row input{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px;background:#fff}
+.check{width:20px;height:20px;accent-color:#222}
+label.small{font-size:11px;color:#888}
+input[type=number],input[type=text],textarea{font-size:14px}
+textarea{width:100%;min-height:70px;border:1px solid #ddd;border-radius:10px;padding:9px}
+.hidden{display:none}.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:5}.navin{width:min(620px,100%);display:grid;grid-template-columns:repeat(4,1fr)}.nav button{border:0;background:#fff;padding:12px 4px 10px;font-size:12px;color:#777}.nav button.active{color:#222;font-weight:700}
+.chart{height:150px;display:flex;align-items:end;gap:5px;border-bottom:1px solid #ddd;padding:10px 4px 0}.bar{flex:1;background:#222;border-radius:5px 5px 0 0;min-height:3px;position:relative}.bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:9px;white-space:nowrap;color:#666}
+.smallbtn{border:0;background:#eee;border-radius:9px;padding:8px 11px}.danger{background:#ffe8e8;color:#b00020}
+.note{font-size:13px;color:#666;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>12周塑形工作台 🏋️‍♀️</h1><div class="sub">腿部线条 · 臀型 · 窄腰 · 体态</div></header>
+
+<div id="home">
+<div class="weekbar" id="weeks"></div>
+<div class="daybar" id="days"></div>
+<main class="page">
+<div class="card">
+<div class="stats"><div class="stat"><b id="dayPct">0%</b><span>今日完成</span></div><div class="stat"><b id="weekPct">0%</b><span>本周完成</span></div><div class="stat"><b id="doneCount">0</b><span>今日完成动作</span></div></div>
+<div class="progress"><div class="fill" id="fill"></div></div>
+</div>
+<div class="card"><div id="workout"></div></div>
+<div class="card"><b>训练备注</b><textarea id="note" placeholder="记录今天的状态、重量、疼痛或感受…"></textarea></div>
+</main>
+</div>
+
+<div id="body" class="hidden page">
+<div class="card"><h3>第 <span id="bodyWeek">1</span> 周身体数据</h3>
+<p><label class="small">体重（kg）</label><input id="weight" type="number" step="0.1" placeholder="57.2"></p>
+<p><label class="small">腰围（cm）</label><input id="waist" type="number" step="0.1" placeholder="67"></p>
+<p><label class="small">臀围（cm）</label><input id="hip" type="number" step="0.1" placeholder="93"></p>
+<button class="smallbtn" onclick="saveBody()">保存本周数据</button>
+</div>
+<div class="card"><b>体重曲线</b><div id="weightChart" class="chart"></div></div>
+<div class="card"><b>腰围曲线</b><div id="waistChart" class="chart"></div></div>
+<div class="card"><b>臀围曲线</b><div id="hipChart" class="chart"></div></div>
+</div>
+
+<div id="history" class="hidden page"><div class="card"><h3>训练历史</h3><div id="historyList"></div></div></div>
+
+<div id="settings" class="hidden page"><div class="card"><h3>设置</h3>
+<p class="note">数据自动保存在当前浏览器的本地存储中。不要清除 Safari 的网站数据，否则可能丢失记录。</p>
+<button class="smallbtn danger" onclick="clearAll()">清空全部训练记录</button>
+</div>
+<div class="card"><b>建议</b><p class="note">每周固定时间记录体重、腰围、臀围；训练时填写实际重量、次数和 RIR。先加次数，再逐步加重量。</p></div></div>
+</div>
+
+<div class="nav"><div class="navin">
+<button class="active" onclick="tab('home',this)">🏋️ 今日</button>
+<button onclick="tab('body',this)">📏 身体数据</button>
+<button onclick="tab('history',this)">📋 训练历史</button>
+<button onclick="tab('settings',this)">⚙️ 设置</button>
+</div></div>
+
+<script>
+const plan={
+"周一":["臀推|4×8–12|20–30kg","罗马尼亚硬拉|3×8–10|8–10kg/手","保加利亚分腿蹲|3×8–10/侧|自重→4–6kg/手","腿弯举|3×10–12|","绳索后踢腿|3×12–15/侧|","髋外展|3×15–20|","Dead Bug|3×10/侧|"],
+"周二":["高位下拉|3×8–12|15–25kg","坐姿划船|3×10–12|","胸托划船|3×10–12|","Face Pull|3×12–15|5–10kg","反向飞鸟|3×12–15|2–4kg/手","哑铃侧平举|3×12–15|2–4kg/手","下巴回收|2×10|"],
+"周三":["游泳|30–45分钟|中等强度"],
+"周四":["史密斯深蹲|3×8–10|轻重量起步","腿举|3×10–12|40–60kg起试","单腿臀推|3×10–12/侧|自重→10–15kg","反向弓步|3×10/侧|","腿弯举|3×12|","髋外展|3×15–20|"],
+"周五":["高位下拉|3×10|","单臂哑铃划船|3×10/侧|","坐姿划船|3×10–12|","反向飞鸟|3×15|","哑铃侧平举|3×12–15|","Face Pull|2×15|","Dead Bug|3×10/侧|","Pallof Press|3×10/侧|","反向卷腹|3×10–15|"],
+"周六":["游泳/主动恢复|30–40分钟|","步数|8000–10000步|"],
+"周日":["休息|恢复|"]
+};
+const days=Object.keys(plan); let week=1,day="周一", tabNow="home";
+let data=JSON.parse(localStorage.getItem("shape12")||"{}");
+function key(){return week+"-"+day}
+function save(){localStorage.setItem("shape12",JSON.stringify(data))}
+function init(){
+document.getElementById("weeks").innerHTML=Array.from({length:12},(_,i)=>`<button class="week ${i+1===week?'active':''}" onclick="setWeek(${i+1})">第${i+1}周</button>`).join("");
+document.getElementById("days").innerHTML=days.map(d=>`<button class="day ${d===day?'active':''}" onclick="setDay('${d}')">${d}</button>`).join("");
+renderWorkout();renderBody();renderHistory();
+}
+function setWeek(w){week=w;init()}
+function setDay(d){day=d;init()}
+function getSession(){data.sessions=data.sessions||{};data.sessions[key()]=data.sessions[key()]||{items:{},note:""};return data.sessions[key()]}
+function renderWorkout(){
+let s=getSession(), arr=plan[day], html="";
+arr.forEach((x,i)=>{let [name,sets,ref]=x.split("|"),v=s.items[i]||{};html+=`<div class="exercise"><div class="ename">${name}</div><div class="meta">${sets}　起始参考：${ref||"按RIR调整"}</div><div class="row"><input class="check" type="checkbox" ${v.done?'checked':''} onchange="upd(${i},'done',this.checked)"><input type="number" step="0.5" placeholder="重量" value="${v.weight||''}" onchange="upd(${i},'weight',this.value)"><input type="number" placeholder="次数/分钟" value="${v.reps||''}" onchange="upd(${i},'reps',this.value)"><input type="number" placeholder="RIR" value="${v.rir||''}" onchange="upd(${i},'rir',this.value)"></div></div>`});
+document.getElementById("workout").innerHTML=html;
+document.getElementById("note").value=s.note||"";
+document.getElementById("note").oninput=e=>{s.note=e.target.value;save();};
+updateStats();
+}
+function upd(i,k,v){getSession().items[i]=getSession().items[i]||{};getSession().items[i][k]=v;save();updateStats();renderHistory()}
+function updateStats(){
+let s=getSession(), n=plan[day].length, done=Object.values(s.items).filter(x=>x.done).length;
+let dayPct=n?Math.round(done/n*100):0;
+let total=0,all=0;
+days.forEach(d=>{let ss=data.sessions?.[week+"-"+d];if(ss){all+=plan[d].length;total+=Object.values(ss.items||{}).filter(x=>x.done).length}});
+document.getElementById("dayPct").textContent=dayPct+"%";document.getElementById("weekPct").textContent=(all?Math.round(total/all*100):0)+"%";document.getElementById("doneCount").textContent=done+"/"+n;document.getElementById("fill").style.width=dayPct+"%";
+}
+function saveBody(){
+data.body=data.body||{};data.body[week]={weight:+document.getElementById("weight").value||"",waist:+document.getElementById("waist").value||"",hip:+document.getElementById("hip").value||""};save();renderBody();alert("第"+week+"周身体数据已保存");
+}
+function renderBody(){
+document.getElementById("bodyWeek").textContent=week;let b=data.body?.[week]||{};document.getElementById("weight").value=b.weight||"";document.getElementById("waist").value=b.waist||"";document.getElementById("hip").value=b.hip||"";
+chart("weightChart","weight");chart("waistChart","waist");chart("hipChart","hip");
+}
+function chart(id,k){
+let vals=Array.from({length:12},(_,i)=>data.body?.[i+1]?.[k]||null), nums=vals.filter(Boolean), el=document.getElementById(id);
+if(!nums.length){el.innerHTML='<div class="note">保存数据后显示曲线</div>';return}
+let min=Math.min(...nums),max=Math.max(...nums);if(max===min){max=min+1}
+el.innerHTML=vals.map((v,i)=>`<div class="bar" style="height:${v?Math.max(8,20+(v-min)/(max-min)*70):3}px"><span>${v||""}</span></div>`).join("");
+}
+function renderHistory(){
+let el=document.getElementById("historyList"),out="";
+for(let w=1;w<=12;w++){let lines=[];
+days.forEach(d=>{let s=data.sessions?.[w+"-"+d];if(!s)return;let done=Object.entries(s.items||{}).filter(([_,v])=>v.done);if(done.length)lines.push(`<b>${d}</b>：完成 ${done.length}/${plan[d].length} 个动作`);});
+if(lines.length)out+=`<div class="exercise"><b>第${w}周</b><p class="note">${lines.join("<br>")}</p></div>`;
+}
+el.innerHTML=out||'<p class="note">还没有训练记录。完成动作并填写重量后会自动保存。</p>';
+}
+function tab(id,btn){document.querySelectorAll(".app>div[id]").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");tabNow=id;if(id==="body")renderBody();if(id==="history")renderHistory()}
+function clearAll(){if(confirm("确定清空全部12周数据吗？")){localStorage.removeItem("shape12");data={};init();alert("已清空")}}
+init();
+</script>
+</body>
+</html>
