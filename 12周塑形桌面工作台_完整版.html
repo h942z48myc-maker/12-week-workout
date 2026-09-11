@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f2ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>12周塑形工作台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f2ed;color:#2b2724;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif}
+.app{max-width:620px;margin:auto;min-height:100vh;padding-bottom:84px}.top{position:sticky;top:0;z-index:5;padding:18px 16px 10px;background:#f6f2edee;backdrop-filter:blur(12px)}
+h1{margin:0;font-size:24px}.sub{font-size:13px;color:#8b8179;margin-top:5px}
+.weekbar{display:flex;gap:7px;overflow:auto;padding:10px 16px}.week{border:0;background:#fff;border-radius:12px;padding:9px 13px;white-space:nowrap;font-size:13px;color:#554e48}.week.on{background:#2b2724;color:#fff}
+.page{padding:0 16px}.card{background:#fff;border-radius:20px;padding:16px;margin:11px 0;box-shadow:0 4px 18px #00000008}.title{font-size:18px;font-weight:700}.muted,.tag{font-size:12px;color:#91877f;margin-top:5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stat{background:#faf8f6;padding:11px;border-radius:13px}.num{font-size:21px;font-weight:800}.lab{font-size:11px;color:#91877f;margin-top:3px}
+.daybar{display:flex;gap:7px;overflow:auto;margin:10px 0}.day{border:0;background:#fff;border-radius:12px;padding:9px 12px;font-size:12px;white-space:nowrap}.day.on{background:#2b2724;color:#fff}
+.exercise{padding:13px 0;border-top:1px solid #eee8e1}.exercise:first-child{border-top:0}.name{font-weight:650}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}
+input,textarea{width:100%;border:1px solid #e2dbd4;border-radius:10px;padding:9px;background:#fdfbf9;font-size:13px}textarea{min-height:90px;font-family:inherit}.check{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:9px}.check input{width:auto}
+.bar{height:10px;background:#eee8e1;border-radius:99px;overflow:hidden;margin-top:9px}.fill{height:100%;background:#2b2724;border-radius:99px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fffdfbf2;border-top:1px solid #eee8e1;z-index:10}.navin{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.nav button{border:0;background:transparent;padding:9px 4px 10px;font-size:11px;color:#8b8179}.nav button.on{color:#2b2724;font-weight:700}.nav span{display:block;font-size:19px;margin-bottom:2px}
+.hidden{display:none}.btn{border:0;background:#eee8e1;border-radius:11px;padding:9px 12px;font-size:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.historyItem{padding:12px 0;border-top:1px solid #eee8e1}.historyItem:first-child{border-top:0}
+.chart{height:150px;display:flex;align-items:end;gap:5px;border-bottom:1px solid #ddd5cd;padding:8px 2px}.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;font-size:9px;color:#91877f}.vbar{width:75%;max-width:18px;background:#2b2724;border-radius:5px 5px 0 0;min-height:3px}.empty{color:#999;text-align:center;padding:20px;font-size:13px}.tip{font-size:12px;line-height:1.65;color:#766d66}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><h1>🏋️ 12周塑形工作台</h1><div class="sub">臀腿线条 · 窄腰平腹 · 颈肩体态</div></header>
+<div id="weeks" class="weekbar"></div>
+
+<main class="page">
+<section id="home"></section>
+<section id="data" class="hidden"></section>
+<section id="history" class="hidden"></section>
+<section id="settings" class="hidden"></section>
+</main>
+
+<div class="nav"><div class="navin">
+<button class="on" onclick="showPage('home',this)"><span>🏠</span>今日</button>
+<button onclick="showPage('data',this)"><span>📈</span>身体数据</button>
+<button onclick="showPage('history',this)"><span>📝</span>训练历史</button>
+<button onclick="showPage('settings',this)"><span>⚙️</span>设置</button>
+</div></div>
+</div>
+
+<script>
+const plan={
+"周一":{title:"下肢A｜臀腿",items:[["臀推","4×8–12","20–30kg试重","2–3分钟"],["罗马尼亚硬拉","3×8–10","8–10kg/手","2分钟"],["保加利亚分腿蹲","3×8–10/侧","自重→4–6kg/手","90–120秒"],["腿弯举","3×10–12","RIR 2–3","60–90秒"],["绳索后踢","3×12–15/侧","轻重量","60–90秒"],["髋外展","3×15–20","中轻重量","60–90秒"],["Dead Bug（可选）","3×10/侧","自重","45–60秒"]]},
+"周二":{title:"上肢A｜体态",items:[["高位下拉","3×8–12","15–25kg试重","90–120秒"],["坐姿划船","3×10–12","RIR 2–3","90–120秒"],["胸托划船","3×10–12","轻中重量","90–120秒"],["面拉","3×12–15","5–10kg","60–90秒"],["反向飞鸟","3×12–15","2–4kg/手","60–90秒"],["哑铃侧平举","3×12–15","2–4kg/手","60–90秒"],["下巴回收","2×10","停5秒","45–60秒"],["靠墙天使","2×10","自重","45–60秒"]]},
+"周三":{title:"游泳 / 恢复",items:[["游泳","30–45分钟","中等强度","按感觉"]]},
+"周四":{title:"下肢B｜臀腿",items:[["史密斯深蹲","3×8–10","空杆/轻重量","2分钟"],["腿举","3×10–12","40–60kg试重*","2分钟"],["单腿臀推","3×10–12/侧","自重→10–15kg","90–120秒"],["反向弓步","3×10/侧","自重→轻哑铃","90–120秒"],["腿弯举","3×12","RIR 2–3","60–90秒"],["髋外展","3×15–20","中轻重量","60–90秒"]]},
+"周五":{title:"上肢B＋核心",items:[["高位下拉","3×10","RIR 2–3","90–120秒"],["单臂哑铃划船","3×10/侧","轻中重量","90–120秒"],["坐姿划船","3×10–12","RIR 2–3","90–120秒"],["反向飞鸟","3×15","2–4kg/手","60–90秒"],["哑铃侧平举","3×12–15","2–4kg/手","60–90秒"],["面拉","2×15","5–10kg","60–90秒"],["Dead Bug","3×10/侧","自重","45–60秒"],["Pallof Press","3×10/侧","轻重量","45–60秒"],["反向卷腹","3×10–15","自重","45–60秒"]]},
+"周六":{title:"主动恢复",items:[["游泳（可选）","30–40分钟","中等强度","按感觉"],["步数","8000–10000步","—","—"]]},
+"周日":{title:"休息",items:[["休息/轻松散步","—","—","—"]]}
+};
+const days=["周一","周二","周三","周四","周五","周六","周日"];
+let week=Number(localStorage.getItem("tw_week")||1);
+let selectedDay=localStorage.getItem("tw_day")||days[(new Date().getDay()+6)%7];
+
+function prefix(){return "tw_w"+week+"_"+selectedDay+"_"}
+function get(k){return localStorage.getItem(prefix()+k)||""}
+function put(k,v){localStorage.setItem(prefix()+k,v)}
+function dayDone(w,d){let n=plan[d].items.length,x=0;for(let i=0;i<n;i++)if(localStorage.getItem("tw_w"+w+"_"+d+"_done"+i)==="1")x++;return [x,n,n?Math.round(x/n*100):0]}
+function weekDone(w){let a=[0,0];days.forEach(d=>{let s=dayDone(w,d);a[0]+=s[0];a[1]+=s[1]});return [a[0],a[1],a[1]?Math.round(a[0]/a[1]*100):0]}
+
+function renderWeeks(){
+document.getElementById("weeks").innerHTML=Array.from({length:12},(_,i)=>i+1).map(i=>`<button class="week ${i===week?'on':''}" onclick="week=${i};localStorage.setItem('tw_week',week);renderAll()">第${i}周</button>`).join("");
+}
+function renderHome(){
+let p=plan[selectedDay],s=dayDone(week,selectedDay);
+let h=`<div class="card"><div class="row"><div><div class="title">${selectedDay}｜${p.title}</div><div class="muted">第${week}周</div></div><b>${s[2]}%</b></div><div class="bar"><div class="fill" style="width:${s[2]}%"></div></div><div class="stats"><div class="stat"><div class="num">${s[0]}</div><div class="lab">完成动作</div></div><div class="stat"><div class="num">${s[1]}</div><div class="lab">计划动作</div></div><div class="stat"><div class="num">${weekDone(week)[2]}%</div><div class="lab">本周完成率</div></div></div></div>`;
+h+=`<div class="daybar">${days.map(d=>`<button class="day ${d===selectedDay?'on':''}" onclick="selectedDay='${d}';localStorage.setItem('tw_day',selectedDay);renderAll()">${d}<br>${dayDone(week,d)[2]}%</button>`).join("")}</div>`;
+h+=`<div class="card">`;
+p.items.forEach((x,i)=>{
+let c=get("done"+i)==="1";
+h+=`<div class="exercise"><div class="name">${x[0]}</div><div class="tag">${x[1]} · ${x[2]} · 休息${x[3]}</div><div class="grid"><input placeholder="重量" value="${get('w'+i)}" onchange="put('w${i}',this.value)"><input placeholder="次数" value="${get('r'+i)}" onchange="put('r${i}',this.value)"><input placeholder="RIR" value="${get('rir'+i)}" onchange="put('rir${i}',this.value)"></div><label class="check"><input type="checkbox" ${c?'checked':''} onchange="put('done${i}',this.checked?'1':'0');renderAll()"> 已完成</label></div>`;
+});
+h+=`<div class="tip">大动作一般保留约2次余力；小动作最后几次可以很吃力，但动作不要变形。</div></div>`;
+document.getElementById("home").innerHTML=h;
+}
+function renderData(){
+let h=`<div class="card"><div class="title">📈 12周训练完成率</div>`;
+for(let i=1;i<=12;i++){let s=weekDone(i);h+=`<div style="margin-top:12px"><div class="row"><span>第${i}周</span><b>${s[2]}%</b></div><div class="bar"><div class="fill" style="width:${s[2]}%"></div></div></div>`}
+h+=`</div><div class="card"><div class="title">⚖️ 每周身体数据</div><div class="muted">每周记录一次：体重、腰围、臀围</div>`;
+for(let i=1;i<=12;i++)h+=`<div class="exercise"><div class="row"><b>第${i}周</b><span class="muted">${localStorage.getItem('tw_weight'+i)||'—'}kg · 腰 ${localStorage.getItem('tw_waist'+i)||'—'}cm</span></div><div class="grid"><input placeholder="体重 kg" value="${localStorage.getItem('tw_weight'+i)||''}" onchange="localStorage.setItem('tw_weight${i}',this.value);renderAll()"><input placeholder="腰围 cm" value="${localStorage.getItem('tw_waist'+i)||''}" onchange="localStorage.setItem('tw_waist${i}',this.value);renderAll()"><input placeholder="臀围 cm" value="${localStorage.getItem('tw_hip'+i)||''}" onchange="localStorage.setItem('tw_hip${i}',this.value);renderAll()"></div></div>`;
+h+=`</div>`;
+[['tw_weight','体重 kg'],['tw_waist','腰围 cm'],['tw_hip','臀围 cm']].forEach(([key,label])=>{
+let vals=[];for(let i=1;i<=12;i++){let v=parseFloat(localStorage.getItem(key+i));vals.push(isNaN(v)?null:v)}
+let valid=vals.filter(v=>v!==null);let min=valid.length?Math.min(...valid):0,max=valid.length?Math.max(...valid):1,range=max-min||1;
+h+=`<div class="card"><div class="title">${label}曲线</div>${valid.length<2?'<div class="empty">记录至少2周后显示趋势</div>':`<div class="chart">${vals.map((v,i)=>v===null?'<div class="col"><span>W'+(i+1)+'</span></div>':`<div class="col"><div class="vbar" style="height:${Math.max(5,((v-min)/range)*105+10)}px"></div><span>W${i+1}</span></div>`).join("")}</div><div class="muted">第1次：${valid[0]} → 最近：${valid.at(-1)}</div>`}</div>`;
+});
+document.getElementById("data").innerHTML=h;
+}
+function renderHistory(){
+let h=`<div class="card"><div class="title">📝 每次训练历史</div><div class="muted">所有完成过的训练会按周、日期保留</div></div>`,found=false;
+for(let w=12;w>=1;w--)for(let d of days){let s=dayDone(w,d);if(s[0]>0){found=true;h+=`<div class="card"><div class="row"><div><b>第${w}周 · ${d}</b><div class="muted">${plan[d].title}</div></div><b>${s[0]}/${s[1]} · ${s[2]}%</b></div>`;
+plan[d].items.forEach((x,i)=>{let base="tw_w"+w+"_"+d+"_";if(localStorage.getItem(base+"done"+i)==="1")h+=`<div class="historyItem"><b>${x[0]}</b><div class="muted">重量：${localStorage.getItem(base+"w"+i)||"—"} · 次数：${localStorage.getItem(base+"r"+i)||"—"} · RIR：${localStorage.getItem(base+"rir"+i)||"—"}</div></div>`});
+h+=`</div>`}}
+if(!found)h+=`<div class="card"><div class="empty">还没有训练历史。完成动作并勾选后，这里会自动记录。</div></div>`;
+document.getElementById("history").innerHTML=h;
+}
+function renderSettings(){
+document.getElementById("settings").innerHTML=`<div class="card"><div class="title">⚙️ 工作台设置</div><p class="tip">当前：第${week}周。所有数据保存在本机浏览器中。建议不要清除Safari网站数据。</p><button class="btn" onclick="if(confirm('确定清除全部训练和身体数据吗？')){localStorage.clear();location.reload()}">清除全部数据</button></div><div class="card"><div class="title">📱 添加到桌面</div><p class="tip">在Safari打开本工作台 → 分享 → 添加到主屏幕。以后可以像App一样从iPhone桌面进入。</p></div>`;
+}
+function showPage(id,btn){["home","data","history","settings"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id));document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("on"));btn.classList.add("on");renderAll()}
+function renderAll(){renderWeeks();renderHome();renderData();renderHistory();renderSettings()}
+renderAll();
+</script>
+</body>
+</html>
